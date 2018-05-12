@@ -108,8 +108,7 @@
                             let info = {
                                 name: this.punchInfo.name,
                                 desc: this.punchInfo.desc,
-                                cycle: this.punchInfo.cycle,
-                                createDate: +new Date()
+                                cycle: this.punchInfo.cycle
                             };
                             this.handleCreate(info, this.punchInfo.deposit);
                         } else {
