@@ -2,6 +2,7 @@
 
 var PunchInContract = function () {
     LocalContractStorage.defineProperties(this, {
+        size: null,
         superuserAddress: null,
         transferLimit: null,
     });
@@ -13,6 +14,7 @@ var PunchInContract = function () {
 PunchInContract.prototype = {
 
     init: function () {
+        this.size = 0;
         this.superuserAddress = Blockchain.transaction.from;
         this.transferLimit = 0.001;
     },
@@ -34,7 +36,12 @@ PunchInContract.prototype = {
 
     // 创建打卡
     create: function (info) {
-
+        this.size++;
+        var from = Blockchain.transaction.from,
+            task = {},
+            tasks = this.tasks.get(from) || [];
+        tasks.push(task);
+        this.tasks.put(from, tasks);
     },
 
     // 打卡
