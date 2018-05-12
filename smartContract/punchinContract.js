@@ -19,8 +19,8 @@ PunchInContract.prototype = {
         this.transferLimit = 0.001;
     },
 
-    _setOperation: function (id, isCreate) {
-        var opArray = this.operation.get(id) || [];
+    _setOperation: function (hash, isCreate) {
+        var opArray = this.operation.get(hash) || [];
         var info = {
             hash: Blockchain.transaction.hash,
             datetime: Date.now()
@@ -31,21 +31,30 @@ PunchInContract.prototype = {
             info.type = 1;
         }
         opArray.push(info);
-        this.operation.put(id, opArray)
+        this.operation.put(hash, opArray)
     },
 
     // 创建打卡
     create: function (info) {
         this.size++;
         var from = Blockchain.transaction.from,
-            task = {},
+            hash = Blockchain.transaction.hash,
+            amount = Blockchain.transaction.value,
+            task = {
+                name: info.name,
+                desc: info.desc,
+                cycle: info.cycle,
+                deposit: amount,
+                hash: hash,
+                datetime: Date.now()
+            },
             tasks = this.tasks.get(from) || [];
         tasks.push(task);
         this.tasks.put(from, tasks);
     },
 
     // 打卡
-    punch: function (id) {
+    punch: function (hash) {
 
     },
 
