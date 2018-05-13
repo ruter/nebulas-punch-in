@@ -17,7 +17,7 @@
         left: 20px;
     }
     .layout-nav{
-        width: 120px;
+        width: 260px;
         margin: 0 auto;
         margin-right: 20px;
     }
@@ -63,6 +63,9 @@
     .mr8 {
         margin-right: 8px;
     }
+    .mb32 {
+        margin-bottom: 32px;
+    }
 </style>
 <template>
     <div class="layout">
@@ -75,6 +78,12 @@
                             <MenuItem name="home">
                                 <Icon type="planet"></Icon>
                                 我的打卡
+                            </MenuItem>
+                        </router-link>
+                        <router-link to="/claim">
+                            <MenuItem name="claim">
+                                <Icon type="cash"></Icon>
+                                我的激励金
                             </MenuItem>
                         </router-link>
                     </div>

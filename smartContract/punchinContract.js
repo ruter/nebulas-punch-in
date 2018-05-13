@@ -110,7 +110,7 @@ PunchInContract.prototype = {
     // create task
     create: function (info) {
         this.size++;
-        if (info.cycle < 3) {
+        if (info.cycle < 7) {
             throw new Error("Invalid Cycle");
         }
         var from = Blockchain.transaction.from,
@@ -211,6 +211,10 @@ PunchInContract.prototype = {
     // get punch in detail by hash
     getPunchDetail: function (hash) {
         return this.operation.get(hash);
+    },
+
+    getBalance: function () {
+        // todo
     },
 
     transfer: function (value) {

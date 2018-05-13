@@ -61,39 +61,34 @@
 <template>
     <div class="index">
         <Row type="flex" justify="center" align="middle">
-            <Col span="6" class="mr8">
-                <Card class="text-center card-task">
-                    <div class="gradient-0 card-header">
-                        <h1>第 1 天</h1>
+            <Col span="12">
+                <div class="mb32" style="text-align: center">
+                    <Input v-model="taskHash" placeholder="请输入要查找的打卡目标唯一 ID...">
+                    <Button slot="append" icon="ios-search" @click.native="handleSearchClick"></Button>
+                    </Input>
+                </div>
+            </Col>
+        </Row>
+        <Row type="flex" justify="center" align="middle" class="mb32">
+            <Col span="6" class="mr8" v-for="(task, idx) in tasks" :key="task.hash">
+                <Card class="text-center card-task" style="cursor: pointer"
+                      @click.native="handleTaskClick(task.hash)">
+                    <div :class="`gradient-${idx} card-header`">
+                        <h1>第 {{ task.datetime | dateDelta }} 天</h1>
                     </div>
                     <div class="card-body">
-                        <h2>健身</h2>
-                        <p class="ellip mt8">每天跑步 3 公里以上</p>
-                        <p class="mt8">2018.05.13 ~ 2018.05.20</p>
-                        <p class="state0">未打卡</p>
+                        <h2>{{ task.name }}</h2>
+                        <p class="ellip mt8">{{ task.desc }}</p>
+                        <p class="mt8">{{ task.datetime | dateInterval(task.cycle) }}</p>
+                        <p :class="`state${task.state}`">{{ state[task.state] }}</p>
                     </div>
                     <div class="card-footer">
-                        <Button type="ghost" shape="circle" icon="checkmark-round" size="large"></Button>
+                        <Button type="ghost" shape="circle" icon="checkmark-round"
+                                size="large" @click.native="handlePunchClick(idx, $event)"></Button>
                     </div>
                 </Card>
             </Col>
-            <Col span="6" class="mr8">
-                <Card class="text-center card-task">
-                    <div class="gradient-1 card-header">
-                        <h1>第 2 天</h1>
-                    </div>
-                    <div class="card-body">
-                        <h2>读书</h2>
-                        <p class="ellip mt8">认真读书 30 分钟</p>
-                        <p class="mt8">2018.05.13 ~ 2018.05.20</p>
-                        <p class="state1">已打卡</p>
-                    </div>
-                    <div class="card-footer">
-                        <Button type="ghost" shape="circle" icon="checkmark-round" size="large"></Button>
-                    </div>
-                </Card>
-            </Col>
-            <Col span="6" class="mr8">
+            <Col span="6" class="mr8" v-for="i in (3 - tasks.length)" :key="i">
                 <router-link to="/create">
                     <Button type="ghost" icon="plus-circled"
                             class="task-create" size="large"></Button>
@@ -114,6 +109,11 @@
         data() {
             return {
                 tasks: [],
+                state: {
+                    '-1': '未完成',
+                    '0': '未打卡',
+                    '1': '已打卡'
+                },
                 account: null,
                 loading: true,
                 interval: null,
@@ -124,25 +124,35 @@
             dateInterval: function (dateString, cycle) {
                 if (dateString) {
                     let date = typeof dateString !== 'object' ? new Date(dateString) : dateString;
-                    let endDate =  new Date(date.getTime() + cycle * 86400000);
+                    let endDate =  new Date(date.getTime() + (cycle - 1) * 86400000);
                     const start = util.dateSep(date);
                     const end = util.dateSep(endDate);
                     return `${start.year}.${start.month}.${start.day} ~ ${end.year}.${end.month}.${end.day}`;
                 } else {
                     return '未知时间';
                 }
+            },
+            dateDelta: function (dateString) {
+                if (dateString) {
+                    let date = typeof dateString !== 'object' ? new Date(dateString) : dateString;
+                    let now =  new Date();
+                    let start = [date.getFullYear(), date.getMonth() + 1, date.getDate()].join('-'),
+                        end = [now.getFullYear(), now.getMonth() + 1, now.getDate()].join('-');
+                    return (new Date(end) - new Date(start)) / 86400000 + 1;
+                } else {
+                    return '?';
+                }
             }
         },
         created() {
-//            this.interval = setInterval(() => {
-//                if (this.exCount > 5) {
-//                    clearInterval(this.interval);
-//                    this.showError();
-//                }
-//                this.exCount++;
-//                this.initAccount();
-//            }, 1000);
-            this.loading = false;
+            this.interval = setInterval(() => {
+                if (this.exCount > 5) {
+                    clearInterval(this.interval);
+                    this.showError();
+                }
+                this.exCount++;
+                this.initAccount();
+            }, 1000);
         },
         methods: {
             initAccount() {
@@ -165,6 +175,43 @@
                 nebPay.simulateCall(to, '0', 'getValidTasks', "[]", {
                     listener: (data) => {
                         this.tasks = util.parse(data.result);
+                        this.loading = false;
+                    }
+                });
+            },
+            handleTaskClick(hash) {
+                this.loading = true;
+                this.$router.push(`/detail/${hash}`);
+            },
+            handlePunchClick(idx, e) {
+                e.stopPropagation();
+                const task = this.tasks[idx];
+                const hash = task.hash;
+                if (task.state === 1) {
+                    this.$Modal.info({
+                        title: '已打卡',
+                        content: '今日已打卡，无需重复操作'
+                    });
+                    return;
+                }
+                this.loading = true;
+                let to = util.getContractAddress(),
+                    args = util.toSting([hash]);
+                nebPay.call(to, '0', 'punch', args, {
+                    listener: (data) => {
+                        task.state = 1;
+                        this.tasks.splice(idx, 1, task);
+                        if (typeof data === 'object') {
+                            this.$Modal.success({
+                                title: '打卡成功',
+                                content: `今日目标「${task.name}」已完成，奖励一下自己吧`
+                            });
+                        } else {
+                            this.$Modal.error({
+                                title: '创建失败',
+                                content: '交易被取消，打卡失败'
+                            });
+                        }
                         this.loading = false;
                     }
                 });
