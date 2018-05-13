@@ -30,7 +30,7 @@
     import NebPay from '../libs/nebpay';
     import {Account} from 'nebulas';
 
-    var nebPay = new NebPay();
+    let nebPay = new NebPay();
 
     export default {
         data() {

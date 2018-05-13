@@ -197,6 +197,7 @@ PunchInContract.prototype = {
             tasks = [];
         for (var i = 0; i < validTask.length; i++) {
             var task = this.tasks.get(validTask[i]);
+            task.state = this._getPunchState(task.hash, task.datetime);
             tasks.push(task);
         }
         return tasks;

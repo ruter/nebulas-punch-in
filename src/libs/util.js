@@ -29,6 +29,17 @@ util.dateFmt = function (dateString) {
     return `${tmpDate.year}.${tmpDate.month}.${tmpDate.day} ${tmpDate.hour}:${tmpDate.min}:${tmpDate.sec}`;
 };
 
+util.dateSep = function (date) {
+    return {
+        year: date.getFullYear(),
+        month: (date.getMonth() < 9) ? '0' + (date.getMonth() + 1) : (date.getMonth() + 1),
+        day: (date.getDate() < 10) ? '0' + date.getDate() : date.getDate(),
+        hour: (date.getHours() < 10) ? '0' + date.getHours() : date.getHours(),
+        min: (date.getMinutes() < 10) ? '0' + date.getMinutes() : date.getMinutes(),
+        sec: (date.getSeconds() < 10) ? '0' + date.getSeconds() : date.getSeconds()
+    }
+};
+
 util.title = function(title) {
     title = title ? title + ' - 星云打卡' : '星云打卡';
     window.document.title = title;
