@@ -9,6 +9,7 @@
     .layout-logo{
         width: 100px;
         height: 30px;
+        text-align: center;
         background: #5b6270;
         border-radius: 3px;
         float: left;
@@ -72,7 +73,9 @@
         <Layout>
             <Header :style="{position: 'fixed', width: '100%'}">
                 <Menu mode="horizontal" theme="dark" active-name="home">
-                    <div class="layout-logo"></div>
+                    <div class="layout-logo">
+                        <h2 style="line-height: 30px;color: #fff;">星云打卡</h2>
+                    </div>
                     <div class="layout-nav">
                         <router-link to="/">
                             <MenuItem name="home">

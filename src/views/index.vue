@@ -64,7 +64,7 @@
             <Col span="12">
                 <div class="mb32" style="text-align: center">
                     <Input v-model="taskHash" placeholder="请输入要查找的打卡目标唯一 ID...">
-                    <Button slot="append" icon="ios-search" @click.native="handleSearchClick"></Button>
+                        <Button slot="append" icon="ios-search" @click.native="handleSearchClick"></Button>
                     </Input>
                 </div>
             </Col>
@@ -84,7 +84,7 @@
                     </div>
                     <div class="card-footer">
                         <Button type="ghost" shape="circle" icon="checkmark-round"
-                                size="large" @click.native="handlePunchClick(idx, $event)"></Button>
+                                size="large" @click.stop="handlePunchClick(idx)"></Button>
                     </div>
                 </Card>
             </Col>
@@ -114,6 +114,7 @@
                     '0': '未打卡',
                     '1': '已打卡'
                 },
+                taskHash: '',
                 account: null,
                 loading: true,
                 interval: null,
@@ -183,8 +184,11 @@
                 this.loading = true;
                 this.$router.push(`/detail/${hash}`);
             },
-            handlePunchClick(idx, e) {
-                e.stopPropagation();
+            handleSearchClick() {
+                this.loading = true;
+                this.$router.push(`/detail/${this.taskHash}`);
+            },
+            handlePunchClick(idx) {
                 const task = this.tasks[idx];
                 const hash = task.hash;
                 if (task.state === 1) {

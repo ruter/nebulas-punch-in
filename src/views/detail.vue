@@ -2,9 +2,6 @@
     .index {
         width: 100%;
     }
-    .mb-32 {
-        margin-bottom: 32px;
-    }
     .task-info {
         font-size: 16px;
     }
@@ -15,9 +12,9 @@
 <template>
     <div class="index">
         <div v-if="'hash' in $route.params && task">
-            <Row type="flex" justify="center" align="middle" class="mb-32">
+            <Row type="flex" justify="center" align="middle" class="mb32">
                 <Col span="12">
-                    <Row type="flex" align="middle" class="task-info mb-32">
+                    <Row type="flex" align="middle" class="task-info mb32">
                         <Col span="3">
                             <p>打卡目标：</p>
                         </Col>
@@ -63,7 +60,7 @@
             <Col span="12">
             <div style="text-align: center">
                 <h1><img :src="require('../map.png')" alt=""></h1>
-                <h2 class="mb-32">没有找到相关内容，重新查找试试吧</h2>
+                <h2 class="mb32">没有找到相关内容，重新查找试试吧</h2>
                 <Input v-model="taskHash" placeholder="请输入要查找的打卡目标唯一 ID...">
                     <Button slot="append" icon="ios-search" @click.native="handleSearchClick"></Button>
                 </Input>
