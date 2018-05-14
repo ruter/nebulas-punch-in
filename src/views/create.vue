@@ -89,20 +89,24 @@
                         { required: true, message: '请选择一个打卡周期', trigger: 'change' }
                     ]
                 },
-                loading: false,
+                loading: true,
                 interval: null,
                 exCount: 0
             }
         },
         created() {
-            this.interval = setInterval(() => {
-                if (this.exCount > 5) {
-                    clearInterval(this.interval);
-                    this.showError();
-                }
-                this.exCount++;
-                this.initAccount();
-            }, 1000);
+            if (util.noWallet) {
+                this.showError();
+            } else {
+                this.interval = setInterval(() => {
+                    if (this.exCount > 5) {
+                        clearInterval(this.interval);
+                        this.showError();
+                    }
+                    this.exCount++;
+                    this.initAccount();
+                }, 500);
+            }
         },
         methods: {
             initAccount() {
@@ -114,6 +118,9 @@
             },
             showError() {
                 this.$Modal.warning(util.PocketErr);
+            },
+            showWarning() {
+                this.$Modal.warning(util.WalletWarning);
             },
             handleConfirmClick() {
                 this.$refs['punchInfo'].validate((valid) => {

@@ -141,27 +141,29 @@
             }
         },
         created() {
-            this.interval = setInterval(() => {
-                if (this.exCount > 5) {
-                    clearInterval(this.interval);
-                    this.showError();
-                }
-                this.exCount++;
+            if (util.noWallet) {
+                this.loading = false;
+                this.showError();
+            } else {
                 this.initAccount();
-            }, 1000);
+            }
         },
         methods: {
             initAccount() {
                 const address = localStorage.getItem('nasAddress');
                 if (address) {
-                    clearInterval(this.interval);
                     this.account = Account.fromAddress(address);
                     this.getTaskByHash();
                     this.getPunchDetail();
+                } else {
+                    this.showWarning();
                 }
             },
             showError() {
                 this.$Modal.warning(util.PocketErr);
+            },
+            showWarning() {
+                this.$Modal.warning(util.WalletWarning);
             },
             getTaskByHash() {
                 if (!this.account) {

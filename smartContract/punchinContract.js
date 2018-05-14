@@ -44,6 +44,11 @@ PunchInContract.prototype = {
     },
 
     _getTaskState: function (hash, cycle) {
+        /**
+         * @param hash {string} task's hash
+         * @param cycle {int} task's cycle
+         * return state {int} 1: finished, 0: doing
+         */
         var opArr = this.operation.get(hash),
             punchDays = opArr.length - 1,
             state = 0;
@@ -76,41 +81,58 @@ PunchInContract.prototype = {
         }
     },
 
-    _setValidTasks: function (hash) {
+    _setValidTasks: function (hash, deposit) {
         var from = Blockchain.transaction.from,
             validTask = this.validTasks.get(from) || [],
             newValidTask = [hash],
-            amount = new BigNumber(0);
+            amount = new BigNumber(0),
+            reward = new BigNumber(0);
         for (var i = 0; i < validTask.length; i++) {
             var key = validTask[i],
                 task = this.tasks.get(key),
                 state = this._getPunchState(key, task.datetime);
             if (state !== -1) {
-                newValidTask.push(key);
+                var taskState = this._getTaskState(task.hash, task.cycle);
+                if (!!taskState) {
+                    reward = reward.plus(task.deposit);
+                } else {
+                    newValidTask.push(key);
+                }
             } else {
                 amount = amount.plus(task.deposit);
             }
         }
-        var deposit = this.deposit.get(from);
         if (!deposit) {
-            deposit = { balance: new BigNumber(0)};
+            deposit = this.deposit.get(from);
+            if (!deposit) {
+                deposit = {
+                    balance: new BigNumber(0),
+                    reward: new BigNumber(0)
+                };
+            }
         }
-        if (amount.gt(0) && amount.lte(deposit.balance)) {
-            deposit.balance = deposit.balance.minus(amount);
-            this.deposit.put(from, deposit);
-        }
+        deposit.reward = reward.plus(deposit.reward);
+        deposit.balance = deposit.balance.minus(amount);
+        this.deposit.put(from, deposit);
         this.validTasks.put(from, newValidTask);
     },
 
-    _setDepositBalance: function (value) {
+    _setDepositBalance: function (value, get) {
         var from = Blockchain.transaction.from,
             deposit = this.deposit.get(from);
         if (!deposit) {
-            deposit = { balance: new BigNumber(0)};
+            deposit = {
+                balance: new BigNumber(0),
+                reward: new BigNumber(0)
+            };
         }
         var balance = new BigNumber(deposit.balance);
         deposit.balance = balance.plus(value);
-        this.deposit.put(from, deposit);
+        if (get) {
+            return deposit;
+        } else {
+            this.deposit.put(from, deposit);
+        }
     },
 
     getUserAddress: function () {
@@ -136,12 +158,10 @@ PunchInContract.prototype = {
                 from: from
             };
         this.tasks.put(hash, task);
-        this._setValidTasks(hash);
+        var deposit = this._setDepositBalance(amount, true);
+        this._setValidTasks(hash, deposit);
         this._setTaskByOwner(hash);
         this._setOperation(hash, true);
-        if (amount.gt(0)) {
-            this._setDepositBalance(amount);
-        }
         Event.Trigger('createTask', {
             hash: hash,
             amount: amount

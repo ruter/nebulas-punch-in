@@ -4,6 +4,25 @@ let util = {
 
 };
 
+window.addEventListener('message', function(e) {
+    if(e.data && e.data.data && e.data.data.account){
+        localStorage.setItem('nasAddress', e.data.data.account);
+    }
+});
+
+util.noWallet = typeof(webExtensionWallet) === "undefined";
+
+util.getAccount = function () {
+    if(typeof(webExtensionWallet) === "undefined"){
+        return;
+    }
+    window.postMessage({
+        "target": "contentscript",
+        "data":{},
+        "method": "getAccount",
+    }, "*");
+};
+
 util.getContractAddress = function () {
     return 'n1rTEqaXFaqSLs7eZg2qY5Ap6iWraTbRPYc';
 };
@@ -57,6 +76,12 @@ util.PocketErr = {
     title: '请先安装浏览器钱包插件',
     content: `<p>检测到你还没安装浏览器钱包插件，请先<a href="https://github.com/ChengOrangeJu/WebExtensionWallet" target="_blank">安装 NAS 钱包插件</a></p><br>
               <p>如果你还没有创建 NAS 钱包，可以参考官方教程进行创建「<a href="https://blog.nebulas.io/2018/04/12/creating-a-nas-wallet/" target="_blank">星云Web钱包教程1：创建NAS钱包</a>」</p><br>
+              <p>确认导入钱包并解锁后，请刷新页面重新进行操作 :)</p>`
+};
+
+util.WalletWarning = {
+    title: '请先解锁钱包',
+    content: `<p>检测到你已安装浏览器钱包插件但未解锁，如果你还没有创建 NAS 钱包，可以参考官方教程进行创建「<a href="https://blog.nebulas.io/2018/04/12/creating-a-nas-wallet/" target="_blank">星云Web钱包教程1：创建NAS钱包</a>」</p><br>
               <p>确认导入钱包并解锁后，请刷新页面重新进行操作 :)</p>`
 };
 

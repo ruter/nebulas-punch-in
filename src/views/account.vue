@@ -81,7 +81,7 @@
                     </Col>
                 </Row>
                 <p class="pet-mb-32" style="text-align: center;">
-                    * 转出代币的数值应大于 {{ transferLimit }} Wei（{{ transferLimit | nasFromBasic }} NAS）
+                    * 转出的激励金数值应大于 {{ transferLimit }} Wei（{{ transferLimit | nasFromBasic }} NAS）
                 </p>
                 <Row type="flex" justify="center" align="middle">
                     <Col span="8" style="text-align: center">
@@ -141,12 +141,18 @@
                     {
                         title: '打卡时长',
                         key: 'cycle',
-                        width: 150
+                        width: 150,
+                        render: (h, params) => {
+                            return h('div', `${params.row.cycle} 天`)
+                        }
                     },
                     {
-                        title: '进度',
+                        title: '当前进度',
                         key: 'days',
-                        width: 150
+                        width: 150,
+                        render: (h, params) => {
+                            return h('div', `${params.row.days} 天`)
+                        }
                     },
                     {
                         title: '目标状态',
@@ -191,7 +197,7 @@
                 }
                 this.exCount++;
                 this.initAccount();
-            }, 1000);
+            }, 500);
         },
         filters: {
             dateFmt: function (dateString) {
@@ -232,6 +238,9 @@
             },
             showError() {
                 this.$Modal.warning(util.PocketErr);
+            },
+            showWarning() {
+                this.$Modal.warning(util.WalletWarning);
             },
             getTasksByOwner() {
                 if (!this.account) {

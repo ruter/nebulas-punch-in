@@ -30,12 +30,7 @@ router.beforeEach((to, from, next) => {
     iView.LoadingBar.start();
     Util.title(to.meta.title);
     localStorage.removeItem('nasAddress');
-    nebPay.simulateCall(Util.getContractAddress(), "0", "getUserAddress", "", {
-        listener: (res) => {
-            const address = Util.parse(res.result);
-            localStorage.setItem('nasAddress', address);
-        }
-    });
+    Util.getAccount();
     next();
 });
 
