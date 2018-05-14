@@ -73,8 +73,12 @@
 <script>
     import util from '../libs/util';
     import NebPay from '../libs/nebpay';
-    import {Account} from 'nebulas';
+    import {Account, Neb, HttpRequest} from 'nebulas';
 
+    let neb = new Neb();
+    neb.setRequest(new HttpRequest(util.ChainHost));
+
+    let nebApi = neb.api;
     let nebPay = new NebPay();
 
     export default {
@@ -118,10 +122,7 @@
                     '0': '创建',
                     '1': '打卡'
                 },
-                account: null,
-                loading: true,
-                interval: null,
-                exCount: 0,
+                loading: true
             }
         },
         filters: {
@@ -136,61 +137,58 @@
         watch: {
             '$route': function () {
                 this.loading = true;
-                this.getTaskByHash();
-                this.getPunchDetail();
+                this.startApp();
             }
         },
         created() {
-            if (util.noWallet) {
-                this.loading = false;
-                this.showError();
-            } else {
-                this.initAccount();
-            }
+            this.startApp();
         },
         methods: {
-            initAccount() {
-                const address = localStorage.getItem('nasAddress');
-                if (address) {
-                    this.account = Account.fromAddress(address);
-                    this.getTaskByHash();
-                    this.getPunchDetail();
-                } else {
-                    this.showWarning();
-                }
-            },
-            showError() {
-                this.$Modal.warning(util.PocketErr);
-            },
-            showWarning() {
-                this.$Modal.warning(util.WalletWarning);
-            },
-            getTaskByHash() {
-                if (!this.account) {
-                    this.showError();
-                    return;
-                }
-                const hash = this.$route.params.hash;
-                let to = util.getContractAddress(),
-                    args = util.toSting([hash]);
-                nebPay.simulateCall(to, '0', 'getTaskByHash', args, {
-                    listener: (data) => {
-                        this.task = util.parse(data.result);
-                    }
+            startApp() {
+                nebApi.getNebState().then((state) => {
+                    this.getTaskByHash(state);
+                    this.getPunchDetail(state);
                 });
             },
-            getPunchDetail() {
-                if (!this.account) {
-                    return;
-                }
+            getTaskByHash(state) {
                 const hash = this.$route.params.hash;
-                let to = util.getContractAddress(),
+                let self = this,
+                    to = util.getContractAddress(),
                     args = util.toSting([hash]);
-                nebPay.simulateCall(to, '0', 'getPunchDetail', args, {
-                    listener: (data) => {
-                        this.punchList = util.parse(data.result) || [];
-                        this.loading = false;
+                nebApi.call({
+                    chainID: state.chain_id,
+                    from: to,
+                    to: to,
+                    value: 0,
+                    gasPrice: 1000000,
+                    gasLimit: 2000000,
+                    contract: {
+                        function: 'getTaskByHash',
+                        args: args
                     }
+                }).then(function (resp) {
+                    self.task = util.parse(resp.result);
+                });
+            },
+            getPunchDetail(state) {
+                const hash = this.$route.params.hash;
+                let self = this,
+                    to = util.getContractAddress(),
+                    args = util.toSting([hash]);
+                nebApi.call({
+                    chainID: state.chain_id,
+                    from: to,
+                    to: to,
+                    value: 0,
+                    gasPrice: 1000000,
+                    gasLimit: 2000000,
+                    contract: {
+                        function: 'getPunchDetail',
+                        args: args
+                    }
+                }).then(function (resp) {
+                    self.punchList = util.parse(resp.result) || [];
+                    self.loading = false;
                 });
             },
             handleSearchClick() {

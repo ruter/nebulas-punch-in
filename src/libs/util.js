@@ -4,23 +4,28 @@ let util = {
 
 };
 
-window.addEventListener('message', function(e) {
-    if(e.data && e.data.data && e.data.data.account){
-        localStorage.setItem('nasAddress', e.data.data.account);
-    }
-});
+util.ChainHost = 'https://testnet.nebulas.io';
 
 util.noWallet = typeof(webExtensionWallet) === "undefined";
 
-util.getAccount = function () {
+util.getAccount = function (self) {
     if(typeof(webExtensionWallet) === "undefined"){
         return;
     }
+
     window.postMessage({
         "target": "contentscript",
         "data":{},
         "method": "getAccount",
     }, "*");
+
+    window.addEventListener('message', function(e) {
+        if(e.data && e.data.data && e.data.data.account){
+            const address = e.data.data.account;
+            self.address = address;
+            localStorage.setItem('nasAddress', address);
+        }
+    });
 };
 
 util.getContractAddress = function () {

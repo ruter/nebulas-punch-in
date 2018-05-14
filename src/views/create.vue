@@ -49,7 +49,7 @@
             <div style="text-align: center">
                 <h1><img :src="require('../plane.png')" alt=""></h1>
                 <h2 class="pet-mb-32">新的打卡项目「{{ punchInfo.name }}」已经创建，你可以在「我的打卡」中查看</h2>
-                <h3 class="pet-mb-32">请好好地完成打卡目标，坚持每天都来打卡，养成良好的习惯，目标一定会离你越来越近的~</h3>
+                <h3 class="pet-mb-32">坚持每天打卡完成目标，养成良好的习惯，成功一定会离你越来越近的~</h3>
                 <p class="pet-mb-32">* 数据写入需要一点时间，如果不能马上看到新创建的打卡内容，可以稍候再刷新查看</p>
                 <router-link to="/">
                     <Button type="primary" size="large">我的打卡</Button>
@@ -70,7 +70,7 @@
     export default {
         data() {
             return {
-                account: null,
+                address: '',
                 created: false,
                 punchInfo: {
                     name: '',
@@ -90,31 +90,29 @@
                     ]
                 },
                 loading: true,
-                interval: null,
-                exCount: 0
+                timeoutObj: null
+            }
+        },
+        watch: {
+            address() {
+                this.startApp();
             }
         },
         created() {
             if (util.noWallet) {
+                this.loading = false;
                 this.showError();
             } else {
-                this.interval = setInterval(() => {
-                    if (this.exCount > 5) {
-                        clearInterval(this.interval);
-                        this.showError();
-                    }
-                    this.exCount++;
-                    this.initAccount();
-                }, 500);
+                this.timeoutObj = setTimeout(() => {
+                    this.showWarning();
+                }, 5000);
+                util.getAccount(this);
             }
         },
         methods: {
-            initAccount() {
-                const address = localStorage.getItem('nasAddress');
-                if (address) {
-                    clearInterval(this.interval);
-                    this.account = Account.fromAddress(address);
-                }
+            startApp() {
+                clearTimeout(this.timeoutObj);
+                this.loading = false;
             },
             showError() {
                 this.$Modal.warning(util.PocketErr);
@@ -125,17 +123,13 @@
             handleConfirmClick() {
                 this.$refs['punchInfo'].validate((valid) => {
                     if (valid) {
-                        if (this.account) {
-                            this.loading = true;
-                            let info = {
-                                name: this.punchInfo.name,
-                                desc: this.punchInfo.desc,
-                                cycle: parseInt(this.punchInfo.cycle)
-                            };
-                            this.handleCreate(info, this.punchInfo.deposit);
-                        } else {
-                            this.showError();
-                        }
+                        this.loading = true;
+                        let info = {
+                            name: this.punchInfo.name,
+                            desc: this.punchInfo.desc,
+                            cycle: parseInt(this.punchInfo.cycle)
+                        };
+                        this.handleCreate(info, this.punchInfo.deposit);
                     } else {
                         this.$Message.error('请将信息填写完整');
                     }

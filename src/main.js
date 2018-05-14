@@ -29,8 +29,6 @@ let nebPay = new NebPay();
 router.beforeEach((to, from, next) => {
     iView.LoadingBar.start();
     Util.title(to.meta.title);
-    localStorage.removeItem('nasAddress');
-    Util.getAccount();
     next();
 });
 

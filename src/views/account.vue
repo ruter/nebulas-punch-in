@@ -134,8 +134,11 @@
                     {
                         title: '激励金',
                         key: 'deposit',
+                        width: 400,
                         render: (h, params) => {
-                            return h('div', `${params.row.deposit} Wei`);
+                            const deposit = params.row.deposit;
+                            const depositNas = Unit.fromBasic(deposit);
+                            return h('div', `${deposit} Wei（${depositNas}NAS）`);
                         }
                     },
                     {
@@ -178,26 +181,14 @@
                     '1': '已完成'
                 },
                 address: '',
-                account: null,
                 loading: true,
-                interval: null,
+                timeoutObj: null,
                 noData: false,
-                exCount: 0,
                 rewardValue: '',
                 userReward: '',
                 transferLimit: '',
                 transferAmount: ''
             }
-        },
-        created() {
-            this.interval = setInterval(() => {
-                if (this.exCount > 5) {
-                    clearInterval(this.interval);
-                    this.showError();
-                }
-                this.exCount++;
-                this.initAccount();
-            }, 500);
         },
         filters: {
             dateFmt: function (dateString) {
@@ -223,18 +214,30 @@
                 return 0;
             }
         },
+        watch: {
+            address() {
+                this.startApp();
+            }
+        },
+        created() {
+            if (util.noWallet) {
+                this.loading = false;
+                this.showError();
+            } else {
+                this.timeoutObj = setTimeout(() => {
+                    this.loading = false;
+                    this.showWarning();
+                }, 5000);
+                util.getAccount(this);
+            }
+        },
         methods: {
-            initAccount() {
-                const address = localStorage.getItem('nasAddress');
-                if (address) {
-                    this.address = address;
-                    clearInterval(this.interval);
-                    this.account = Account.fromAddress(address);
-                    this.getTasksByOwner();
-//                    this.getUserReward();
-//                    this.getTransferLimit();
-//                    this.getTransferFee();
-                }
+            startApp() {
+                clearTimeout(this.timeoutObj);
+                this.getTasksByOwner();
+//                this.getUserReward();
+//                this.getTransferLimit();
+//                this.getTransferFee();
             },
             showError() {
                 this.$Modal.warning(util.PocketErr);
@@ -243,10 +246,6 @@
                 this.$Modal.warning(util.WalletWarning);
             },
             getTasksByOwner() {
-                if (!this.account) {
-                    this.showError();
-                    return;
-                }
                 let to = util.getContractAddress(),
                     args = util.toSting([this.page, this.limit]);
                 nebPay.simulateCall(to, '0', 'getTasksByOwner', args, {

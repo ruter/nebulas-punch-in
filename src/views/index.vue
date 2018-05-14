@@ -93,6 +93,7 @@
     export default {
         data() {
             return {
+                address: '',
                 tasks: [],
                 state: {
                     '-1': '未完成',
@@ -100,10 +101,8 @@
                     '1': '已打卡'
                 },
                 taskHash: '',
-                account: null,
                 loading: true,
-                interval: null,
-                exCount: 0
+                timeoutObj: null,
             }
         },
         filters: {
@@ -126,23 +125,27 @@
                 }
             }
         },
+        watch: {
+            address() {
+                this.startApp();
+            }
+        },
         created() {
             if (util.noWallet) {
                 this.loading = false;
                 this.showError();
             } else {
-                this.initAccount();
+                this.timeoutObj = setTimeout(() => {
+                    this.loading = false;
+                    this.showWarning();
+                }, 5000);
+                util.getAccount(this);
             }
         },
         methods: {
-            initAccount() {
-                const address = localStorage.getItem('nasAddress');
-                if (address) {
-                    this.account = Account.fromAddress(address);
-                    this.getValidTasks();
-                } else {
-                    this.showWarning();
-                }
+            startApp() {
+                clearTimeout(this.timeoutObj);
+                this.getValidTasks();
             },
             showError() {
                 this.$Modal.warning(util.PocketErr);
@@ -151,10 +154,6 @@
                 this.$Modal.warning(util.WalletWarning);
             },
             getValidTasks() {
-                if (!this.account) {
-                    this.showError();
-                    return;
-                }
                 let to = util.getContractAddress();
                 nebPay.simulateCall(to, '0', 'getValidTasks', "[]", {
                     listener: (data) => {
@@ -163,6 +162,7 @@
                             return task.state !== -1 && (util.dateDelta(task.datetime) <= task.cycle);
                         });
                         this.loading = false;
+                        console.log('>>>', tasks)
                     }
                 });
             },
