@@ -43,6 +43,16 @@ PunchInContract.prototype = {
         this.taskByOwner.put(from, taskByOwner);
     },
 
+    _getTaskState: function (hash, cycle) {
+        var opArr = this.operation.get(hash),
+            punchDays = opArr.length - 1,
+            state = 0;
+        if (cycle <= punchDays) {
+            state = 1;
+        }
+        return state;
+    },
+
     _getPunchState: function (hash, createTime) {
         /**
          * @param hash {string} task's hash
@@ -184,10 +194,25 @@ PunchInContract.prototype = {
             end = len;
         }
         for (var i = start; i < end; i++) {
-            var tmpTask = this.tasks.get(tasks[i]);
+            var tmpTask = this.tasks.get(tasks[i]),
+                hash = tmpTask.hash,
+                opArray = this.operation.get(hash),
+                days = opArray.length - 1,
+                punchState = this._getPunchState(hash, tmpTask.datetime),
+                state = punchState;
+            if (punchState !== -1) {
+                state = this._getTaskState(hash, tmpTask.cycle);
+            }
+            tmpTask.days = days;
+            tmpTask.state = state;
             allTasks.push(tmpTask);
         }
-        return allTasks;
+        return {
+            tasks: allTasks,
+            total: len,
+            limit: limit,
+            page: page
+        };
     },
 
     // get valid tasks
@@ -214,7 +239,7 @@ PunchInContract.prototype = {
     },
 
     getBalance: function () {
-        // todo
+        // todo: minus failed task's deposit
     },
 
     transfer: function (value) {

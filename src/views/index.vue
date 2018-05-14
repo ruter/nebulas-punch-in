@@ -36,21 +36,6 @@
         height: 80px;
         overflow: hidden;
     }
-    .state0 {
-        margin-top: 16px;
-        font-size: 16px;
-        color: #2d8cf0;
-    }
-    .state1 {
-        margin-top: 8px;
-        font-size: 16px;
-        color: #19be6b;
-    }
-    .state-1 {
-        margin-top: 8px;
-        font-size: 16px;
-        color: #ed3f14;
-    }
     .task-create {
         width: 400px !important;
         height: 500px !important;
@@ -135,11 +120,7 @@
             },
             dateDelta: function (dateString) {
                 if (dateString) {
-                    let date = typeof dateString !== 'object' ? new Date(dateString) : dateString;
-                    let now =  new Date();
-                    let start = [date.getFullYear(), date.getMonth() + 1, date.getDate()].join('-'),
-                        end = [now.getFullYear(), now.getMonth() + 1, now.getDate()].join('-');
-                    return (new Date(end) - new Date(start)) / 86400000 + 1;
+                    return util.dateDelta(dateString);
                 } else {
                     return '?';
                 }
@@ -175,7 +156,10 @@
                 let to = util.getContractAddress();
                 nebPay.simulateCall(to, '0', 'getValidTasks', "[]", {
                     listener: (data) => {
-                        this.tasks = util.parse(data.result);
+                        let tasks = util.parse(data.result);
+                        this.tasks = tasks.filter((task) => {
+                            return task.state !== -1 && (util.dateDelta(task.datetime) <= task.cycle);
+                        });
                         this.loading = false;
                     }
                 });

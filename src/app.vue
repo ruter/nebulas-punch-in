@@ -18,7 +18,7 @@
         left: 20px;
     }
     .layout-nav{
-        width: 260px;
+        width: 360px;
         margin: 0 auto;
         margin-right: 20px;
     }
@@ -67,6 +67,21 @@
     .mb32 {
         margin-bottom: 32px;
     }
+    .state0 {
+        margin-top: 16px;
+        font-size: 16px;
+        color: #2d8cf0;
+    }
+    .state1 {
+        margin-top: 8px;
+        font-size: 16px;
+        color: #19be6b;
+    }
+    .state-1 {
+        margin-top: 8px;
+        font-size: 16px;
+        color: #ed3f14;
+    }
 </style>
 <template>
     <div class="layout">
@@ -83,10 +98,16 @@
                                 我的打卡
                             </MenuItem>
                         </router-link>
-                        <router-link to="/claim">
-                            <MenuItem name="claim">
+                        <router-link to="/account">
+                            <MenuItem name="account">
                                 <Icon type="cash"></Icon>
-                                我的激励金
+                                个人中心
+                            </MenuItem>
+                        </router-link>
+                        <router-link to="/about">
+                            <MenuItem name="about">
+                                <Icon type="bug"></Icon>
+                                关于
                             </MenuItem>
                         </router-link>
                     </div>

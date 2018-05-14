@@ -5,7 +5,7 @@ let util = {
 };
 
 util.getContractAddress = function () {
-    return 'n1fvjGKPPvmVh5GArhdBZM3f1hdGpksDHQH';
+    return 'n1rTEqaXFaqSLs7eZg2qY5Ap6iWraTbRPYc';
 };
 
 util.parse = function (data) {
@@ -27,6 +27,14 @@ util.dateFmt = function (dateString) {
         sec: (date.getSeconds() < 10) ? '0' + date.getSeconds() : date.getSeconds()
     };
     return `${tmpDate.year}.${tmpDate.month}.${tmpDate.day} ${tmpDate.hour}:${tmpDate.min}:${tmpDate.sec}`;
+};
+
+util.dateDelta = function (dateString) {
+    let date = typeof dateString !== 'object' ? new Date(dateString) : dateString;
+    let now =  new Date();
+    let start = [date.getFullYear(), date.getMonth() + 1, date.getDate()].join('-'),
+        end = [now.getFullYear(), now.getMonth() + 1, now.getDate()].join('-');
+    return (new Date(end) - new Date(start)) / 86400000 + 1;
 };
 
 util.dateSep = function (date) {

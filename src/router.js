@@ -17,10 +17,16 @@ const routers = [{
     },
     component: (resolve) => require(['./views/detail.vue'], resolve)
 }, {
-    path: '/claim',
+    path: '/account',
     meta: {
-        title: '我的激励金'
+        title: '个人中心'
     },
-    component: (resolve) => require(['./views/claim.vue'], resolve)
+    component: (resolve) => require(['./views/account.vue'], resolve)
+}, {
+    path: '/about',
+    meta: {
+        title: '关于'
+    },
+    component: (resolve) => require(['./views/about.vue'], resolve)
 }];
 export default routers;
