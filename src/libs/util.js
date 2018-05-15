@@ -4,7 +4,7 @@ let util = {
 
 };
 
-util.ChainHost = 'https://testnet.nebulas.io';
+util.ChainHost = 'https://mainnet.nebulas.io';
 
 util.noWallet = typeof(webExtensionWallet) === "undefined";
 
@@ -29,7 +29,7 @@ util.getAccount = function (self) {
 };
 
 util.getContractAddress = function () {
-    return 'n21UkKp6pZzccN89DwRxK2UTm2jyuKPsL6j';
+    return 'n1o3wGeeUG2HAQaHP67d9nwSGeeaUK49FrZ';
 };
 
 util.parse = function (data) {
