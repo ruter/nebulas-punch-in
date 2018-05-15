@@ -111,8 +111,9 @@ PunchInContract.prototype = {
                 };
             }
         }
+        var balance = deposit.balance instanceof BigNumber ? deposit.balance : new BigNumber(deposit.balance);
         deposit.reward = reward.plus(deposit.reward);
-        deposit.balance = deposit.balance.minus(amount);
+        deposit.balance = balance.minus(amount);
         this.deposit.put(from, deposit);
         this.validTasks.put(from, newValidTask);
     },
@@ -135,8 +136,8 @@ PunchInContract.prototype = {
         }
     },
 
-    getUserAddress: function () {
-        return Blockchain.transaction.from;
+    getTransferLimit: function () {
+        return this.transferLimit;
     },
 
     // create task
@@ -259,21 +260,52 @@ PunchInContract.prototype = {
     },
 
     getBalance: function () {
-        // todo: minus failed task's deposit
+        var from = Blockchain.transaction.from,
+            deposit = this.deposit.get(from);
+        if (!deposit) {
+            deposit = {
+                balance: new BigNumber(0),
+                reward: new BigNumber(0)
+            }
+        } else {
+            var validTasks = this.getValidTasks(),
+                amount = new BigNumber(0),
+                reward = new BigNumber(0);
+            for (var i = 0; i < validTasks.length; i++) {
+                var task = validTasks[i],
+                    hash = task.hash,
+                    state = this._getPunchState(hash, task.datetime);
+                if (state !== -1) {
+                    var taskState = this._getTaskState(hash, task.cycle);
+                    if (!!taskState) {
+                        reward = reward.plus(task.deposit);
+                    }
+                } else {
+                    amount = amount.plus(task.deposit);
+                }
+            }
+            var balance = deposit.balance instanceof BigNumber ? deposit.balance : new BigNumber(deposit.balance);
+            deposit.reward = reward.plus(deposit.reward);
+            deposit.balance = balance.minus(amount);
+        }
+        return deposit;
     },
 
     transfer: function (value) {
-        var from = Blockchain.transaction.from;
-        var amount = new BigNumber(value);
+        var from = Blockchain.transaction.from,
+            amount = new BigNumber(value);
         if (from === this.superuserAddress) {
             Blockchain.transfer(this.superuserAddress, amount);
         } else {
-            var deposit = this.deposit.get(from);
-            var balance = deposit ? new BigNumber(deposit.balance) : new BigNumber(0);
-            if (deposit && amount.lte(balance) && amount.gt(this.transferLimit)) {
+            var deposit = this.getBalance(),
+                balance = deposit.balance,
+                reward = deposit.reward;
+            if (amount.lte(reward) && amount.gt(this.transferLimit)) {
                 Blockchain.transfer(from, amount);
                 deposit.balance = balance.minus(amount);
-                this.petRewards.put(from, reward);
+                deposit.reward = reward.minus(amount);
+                this.petRewards.put(from, deposit);
+                return deposit;
             } else {
                 throw new Error("Insufficient Balance");
             }

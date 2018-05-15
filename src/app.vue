@@ -116,7 +116,7 @@
             <Content :style="{margin: '88px 20px 0', padding: '32px 0', background: '#fff', minHeight: '500px'}">
                 <router-view></router-view>
             </Content>
-            <Footer class="layout-footer-center">2018 &copy; PunchIn</Footer>
+            <Footer class="layout-footer-center">2018 &copy; 星云打卡</Footer>
         </Layout>
     </div>
 </template>
@@ -126,6 +126,9 @@
             return {
 
             };
+        },
+        created() {
+
         },
         mounted() {
 

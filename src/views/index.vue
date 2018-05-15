@@ -162,7 +162,6 @@
                             return task.state !== -1 && (util.dateDelta(task.datetime) <= task.cycle);
                         });
                         this.loading = false;
-                        console.log('>>>', tasks)
                     }
                 });
             },

@@ -16,15 +16,12 @@ Vue.use(VueRouter);
 Vue.use(iView);
 
 
-
 // 路由配置
 const RouterConfig = {
     mode: 'hash',
     routes: Routers
 };
 const router = new VueRouter(RouterConfig);
-
-let nebPay = new NebPay();
 
 router.beforeEach((to, from, next) => {
     iView.LoadingBar.start();
@@ -36,8 +33,6 @@ router.afterEach(() => {
     iView.LoadingBar.finish();
     window.scrollTo(0, 0);
 });
-
-
 
 new Vue({
     el: '#app',

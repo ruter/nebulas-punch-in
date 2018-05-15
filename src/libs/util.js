@@ -29,7 +29,7 @@ util.getAccount = function (self) {
 };
 
 util.getContractAddress = function () {
-    return 'n1rTEqaXFaqSLs7eZg2qY5Ap6iWraTbRPYc';
+    return 'n21UkKp6pZzccN89DwRxK2UTm2jyuKPsL6j';
 };
 
 util.parse = function (data) {

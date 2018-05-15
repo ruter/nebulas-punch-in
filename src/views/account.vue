@@ -72,8 +72,10 @@
                 <Row type="flex" justify="center" align="middle">
                     <Col span="20" style="text-align: center">
                     <h2>
-                            <span class="pet-mr-32">
-                                <Icon type="ios-infinite"></Icon>激励金额: {{ userReward }} Wei（{{ userReward | nasFromBasic }} NAS）
+                            <span>
+                                <Icon type="ios-infinite"></Icon>
+                                激励金额: {{ balance }} Wei（{{ balance | nasFromBasic }} NAS）
+                                可转出金额：{{ reward }} Wei（{{ reward | nasFromBasic }} NAS）
                             </span>
                         <span><Icon type="cash"></Icon>钱包地址：{{ address }}</span>
                     </h2>
@@ -92,7 +94,7 @@
                     <p v-show="transferAmount > 0">
                         {{ transferAmount }} Wei ≈ {{ transferAmount | nasFromBasic }} NAS
                     </p>
-                    <Button class="pet-mt-16" type="primary" size="large" @click="handleTransferClick">转出</Button>
+                    <Button class="pet-mt-16" type="primary" size="large" @click="handleTransfer">转出</Button>
                     </Col>
                 </Row>
             </TabPane>
@@ -124,6 +126,10 @@
                         }
                     },
                     {
+                        title: '目标',
+                        key: 'name'
+                    },
+                    {
                         title: '创建时间',
                         key: 'datetime',
                         width: 200,
@@ -144,7 +150,7 @@
                     {
                         title: '打卡时长',
                         key: 'cycle',
-                        width: 150,
+                        width: 100,
                         render: (h, params) => {
                             return h('div', `${params.row.cycle} 天`)
                         }
@@ -152,7 +158,7 @@
                     {
                         title: '当前进度',
                         key: 'days',
-                        width: 150,
+                        width: 100,
                         render: (h, params) => {
                             return h('div', `${params.row.days} 天`)
                         }
@@ -185,7 +191,8 @@
                 timeoutObj: null,
                 noData: false,
                 rewardValue: '',
-                userReward: '',
+                balance: '',
+                reward: '',
                 transferLimit: '',
                 transferAmount: ''
             }
@@ -235,9 +242,8 @@
             startApp() {
                 clearTimeout(this.timeoutObj);
                 this.getTasksByOwner();
-//                this.getUserReward();
-//                this.getTransferLimit();
-//                this.getTransferFee();
+                this.getUserReward();
+                this.getTransferLimit();
             },
             showError() {
                 this.$Modal.warning(util.PocketErr);
@@ -245,12 +251,27 @@
             showWarning() {
                 this.$Modal.warning(util.WalletWarning);
             },
+            setTransferTime() {
+                localStorage.setItem('nasTransfer', Date.now());
+            },
+            getTransferOk() {
+                let now = Date.now();
+                let transferTime = localStorage.getItem('nasTransfer');
+                if (!transferTime) {
+                    return true;
+                }
+                const delta = now - transferTime;
+                if (delta >= 1800000) {
+                    localStorage.removeItem('nasTransfer');
+                    return true;
+                }
+                return false;
+            },
             getTasksByOwner() {
                 let to = util.getContractAddress(),
                     args = util.toSting([this.page, this.limit]);
                 nebPay.simulateCall(to, '0', 'getTasksByOwner', args, {
                     listener: (data) => {
-                        console.log(data);
                         if (data.execute_err) {
                             this.noData = true;
                             this.loading = false;
@@ -278,34 +299,44 @@
             },
             getUserReward() {
                 let to = util.getContractAddress();
-                nebPay.simulateCall(to, '0', 'getUserReward', "[]", {
+                nebPay.simulateCall(to, '0', 'getBalance', "[]", {
                     listener: (data) => {
-                        let reward = util.parse(data.result);
-                        if (reward) {
-                            this.userReward = reward.balance;
-                        } else {
-                            this.userReward = 0;
-                        }
+                        let deposit = util.parse(data.result);
+                        this.balance = deposit.balance;
+                        this.reward = deposit.reward;
                     }
                 });
             },
+            handlePageChange(page) {
+                this.loading = true;
+                this.page = page;
+                this.getTasksByOwner();
+            },
             handleTransferClick() {
+                if (!this.getTransferOk()) {
+                    this.$Modal.error({
+                        title: '无法转出',
+                        content: '激励金的转出时间间隔不能小于 30 分钟'
+                    });
+                    return;
+                }
                 let to = util.getContractAddress(),
                     value = this.transferAmount,
+                    basicValue = Unit.toBasic(value),
                     limit = this.transferLimit,
-                    userReward = this.userReward,
-                    args = util.toSting([Unit.toBasic(value)]);
-                if (!(value && Unit.toBasic(value).gt(limit))) {
+                    userReward = this.reward,
+                    args = util.toSting([basicValue]);
+                if (!(value && basicValue.gt(limit))) {
                     this.$Modal.warning({
                         title: '数额错误',
                         content: `转出数额必须大于 ${limit} Wei（${Unit.fromBasic(limit)} NAS）`
                     });
                     return;
                 }
-                if (Unit.toBasic(value).gt(userReward)) {
+                if (basicValue.gt(userReward)) {
                     this.$Modal.error({
                         title: '数额错误',
-                        content: `转出数额不能大于余额 ${userReward} Wei（${Unit.fromBasic(userReward)} NAS）`
+                        content: `转出数额不能大于可转出金额 ${userReward} Wei（${Unit.fromBasic(userReward)} NAS）`
                     });
                     return;
                 }
@@ -313,8 +344,10 @@
                 nebPay.call(to, "0", 'transfer', args, {
                     listener: (data) => {
                         if (!data.execute_err) {
-                            userReward = new BigNumber(userReward);
-                            this.userReward = userReward.minus(Unit.toBasic(value));
+                            this.setTransferTime();
+                            let deposit = util.parse(data.result);
+                            this.balance = deposit.balance;
+                            this.reward = deposit.reward;
                             this.$Modal.success({
                                 title: '转出成功',
                                 content: '代币已转出，请稍候查看钱包交易记录'
