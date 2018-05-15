@@ -94,7 +94,7 @@
                     <p v-show="transferAmount > 0">
                         {{ transferAmount }} Wei ≈ {{ transferAmount | nasFromBasic }} NAS
                     </p>
-                    <Button class="pet-mt-16" type="primary" size="large" @click="handleTransfer">转出</Button>
+                    <Button class="pet-mt-16" type="primary" size="large" @click="handleTransferClick">转出</Button>
                     </Col>
                 </Row>
             </TabPane>
