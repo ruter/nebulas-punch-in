@@ -273,17 +273,22 @@
                 nebPay.simulateCall(to, '0', 'getTasksByOwner', args, {
                     listener: (data) => {
                         if (data.execute_err) {
+                            if (data.execute_err == 'contract check failed') {
+                                this.$Modal.error({
+                                    title: '网络错误',
+                                    content: '请确认钱包插件网络为「Mainnet」，切换后刷新重试'
+                                })
+                            }
                             this.noData = true;
-                            this.loading = false;
-                            return;
-                        }
-                        const res = util.parse(data.result);
-                        if (res && res.tasks.length) {
-                            this.taskData = res.tasks;
-                            this.total = res.total;
-                            this.limit = res.limit;
                         } else {
-                            this.noData = true;
+                            const res = util.parse(data.result);
+                            if (res && res.tasks.length) {
+                                this.taskData = res.tasks;
+                                this.total = res.total;
+                                this.limit = res.limit;
+                            } else {
+                                this.noData = true;
+                            }
                         }
                         this.loading = false;
                     }

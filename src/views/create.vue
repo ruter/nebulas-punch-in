@@ -143,7 +143,6 @@
                     listener: (data) => {
                         if (typeof data === 'object') {
                             this.created = true;
-                            console.log(data)
                         } else {
                             this.$Modal.error({
                                 title: '创建失败',

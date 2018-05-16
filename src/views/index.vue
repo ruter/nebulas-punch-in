@@ -157,10 +157,17 @@
                 let to = util.getContractAddress();
                 nebPay.simulateCall(to, '0', 'getValidTasks', "[]", {
                     listener: (data) => {
-                        let tasks = util.parse(data.result);
-                        this.tasks = tasks.filter((task) => {
-                            return task.state !== -1 && (util.dateDelta(task.datetime) <= task.cycle);
-                        });
+                        if (data.execute_err && data.execute_err == 'contract check failed') {
+                            this.$Modal.error({
+                                title: '网络错误',
+                                content: '请确认钱包插件网络为「Mainnet」，切换后刷新重试'
+                            })
+                        } else {
+                            let tasks = util.parse(data.result);
+                            this.tasks = tasks.filter((task) => {
+                                return task.state !== -1 && (util.dateDelta(task.datetime) <= task.cycle);
+                            });
+                        }
                         this.loading = false;
                     }
                 });
